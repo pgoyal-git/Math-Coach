@@ -1,0 +1,154 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: Arial, Helvetica, sans-serif;
+  --font-mono: "Courier New", Courier, monospace;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+button,
+input,
+math-field,
+textarea {
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    box-shadow 140ms ease,
+    color 140ms ease;
+}
+
+button:focus:not(:focus-visible),
+label:focus-within:not(:has(:focus-visible)) {
+  outline: none;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-ring-offset-shadow: 0 0 #0000;
+  box-shadow: var(--tw-shadow, none) !important;
+}
+
+.math-copy .katex {
+  font-size: 1em;
+  line-height: inherit;
+}
+
+.math-copy .katex-display {
+  margin: 0.5rem 0;
+}
+
+.math-step-field {
+  display: block;
+  width: 100%;
+  min-height: 2.75rem;
+  border: 0;
+  background: transparent;
+  padding: 0.55rem 0.5rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  outline: none;
+  --caret-color: #2563eb;
+  --contains-highlight-background-color: #dbeafe;
+  --selection-background-color: #bfdbfe;
+  --placeholder-color: #64748b;
+}
+
+.math-step-field::part(menu-toggle),
+.math-step-field::part(virtual-keyboard-toggle) {
+  display: none;
+}
+
+.firework-stage {
+  position: absolute;
+  inset: 0;
+}
+
+.celebration-glow {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(20, 184, 166, 0.2), transparent 34%),
+    radial-gradient(circle at 26% 34%, rgba(236, 72, 153, 0.16), transparent 28%),
+    radial-gradient(circle at 74% 36%, rgba(245, 158, 11, 0.16), transparent 28%);
+  opacity: 0;
+  animation: celebration-glow 2200ms ease-out forwards;
+}
+
+.firework-particle {
+  position: absolute;
+  left: var(--firework-left);
+  top: var(--firework-top);
+  width: var(--firework-size);
+  height: var(--firework-size);
+  border-radius: 9999px;
+  background: var(--firework-color);
+  box-shadow: 0 0 22px var(--firework-color);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.6);
+  animation: firework-pop 1450ms ease-out var(--firework-delay) forwards;
+}
+
+.firework-particle::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.15rem;
+  height: 1.4rem;
+  border-radius: 9999px;
+  background: currentColor;
+  color: var(--firework-color);
+  opacity: 0.75;
+  transform: translate(-50%, -50%) rotate(28deg);
+}
+
+@keyframes firework-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(
+        calc(-50% + var(--firework-x)),
+        calc(-50% + var(--firework-y))
+      )
+      scale(0.12);
+  }
+}
+
+@keyframes celebration-glow {
+  0% {
+    opacity: 0;
+  }
+
+  18% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .celebration-glow,
+  .firework-particle {
+    animation: none;
+    opacity: 0;
+  }
+}
