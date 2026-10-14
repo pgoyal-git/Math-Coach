@@ -3,7 +3,7 @@
 import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { InlineMath } from "react-katex";
 import Link from "next/link";
-import MathStepInput from "@/app/MathStepInput";
+import MathStepInput, { type MathStepInputHandle } from "@/app/MathStepInput";
 import {
   expressionToLatex,
   inlineLatexForDisplay,
@@ -601,6 +601,7 @@ export default function Home() {
     correct
   );
   const latestMessageRef = useRef<HTMLDivElement | null>(null);
+  const mathStepInputRef = useRef<MathStepInputHandle | null>(null);
   const progressImportRef = useRef<HTMLInputElement | null>(null);
   const demoTimeoutRef = useRef<number | null>(null);
   const demoTypingTimeoutRef = useRef<number | null>(null);
@@ -1190,7 +1191,10 @@ export default function Home() {
   async function sendMessage(actionOverride?: "review" | "answer" | "stuck") {
     if (!sessionId || loading) return;
 
-    const trimmedInput = input.trim();
+    const liveDraft = mathStepInputRef.current?.getDraft();
+    const submissionInput = liveDraft?.value ?? input;
+    const submissionDisplay = liveDraft?.displayValue ?? inputDisplay;
+    const trimmedInput = submissionInput.trim();
     const hasSubmittedDraft = hasVisibleStudentDraft(trimmedInput);
     const userText = hasSubmittedDraft ? trimmedInput : "I'm stuck";
     const nextMessageAction = hasSubmittedDraft
@@ -1202,7 +1206,11 @@ export default function Home() {
 
     setMessages((m) => [
       ...m,
-      { role: "user", content: userText, displayContent: inputDisplay || undefined },
+      {
+        role: "user",
+        content: userText,
+        displayContent: submissionDisplay || undefined,
+      },
     ]);
 
     setInput("");
@@ -2201,6 +2209,7 @@ export default function Home() {
           {!correct && !demoMode && (
             <div className="mt-4 flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-2 shadow-sm sm:flex-row">
               <MathStepInput
+                ref={mathStepInputRef}
                 value={input}
                 disabled={composerDisabled}
                 autoFocus={!composerDisabled}

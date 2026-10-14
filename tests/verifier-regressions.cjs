@@ -482,6 +482,23 @@ test("step input keeps multi-digit numeric exponents together", () => {
   assert.ok(source.includes("!/^[0-9.]+$/.test(insertedText)"));
 });
 
+test("message submission snapshots the live MathLive value", () => {
+  const inputSource = require("node:fs").readFileSync(
+    path.join(rootDir, "app/MathStepInput.tsx"),
+    "utf8"
+  );
+  const pageSource = require("node:fs").readFileSync(
+    path.join(rootDir, "app/page.tsx"),
+    "utf8"
+  );
+
+  assert.match(inputSource, /useImperativeHandle\([\s\S]{0,180}?getDraft: getCurrentDraft/);
+  assert.match(pageSource, /const liveDraft = mathStepInputRef\.current\?\.getDraft\(\)/);
+  assert.match(pageSource, /const submissionInput = liveDraft\?\.value \?\? input/);
+  assert.match(pageSource, /const submissionDisplay = liveDraft\?\.displayValue \?\? inputDisplay/);
+  assert.match(pageSource, /ref=\{mathStepInputRef\}/);
+});
+
 test("starter strategy uses Terra on text and image paths", () => {
   const source = require("node:fs").readFileSync(
     path.join(rootDir, "app/api/session/create/route.ts"),

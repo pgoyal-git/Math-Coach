@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  forwardRef,
+  type ForwardedRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import "mathlive";
 import type { MathfieldElement } from "mathlive";
 import {
@@ -17,6 +25,15 @@ type MathStepInputProps = {
   modeResetKey?: string | null;
   onChange: (value: string, displayValue?: string | null) => void;
   onSubmit: () => void;
+};
+
+export type MathStepDraft = {
+  value: string;
+  displayValue: string | null;
+};
+
+export type MathStepInputHandle = {
+  getDraft: () => MathStepDraft;
 };
 
 function textPlaceholderLatex(text: string) {
@@ -43,16 +60,19 @@ function hasVisibleMathfieldContent(mathfield: MathfieldElement) {
   );
 }
 
-export default function MathStepInput({
-  value,
-  disabled,
-  placeholder,
-  maxChars,
-  autoFocus = false,
-  modeResetKey,
-  onChange,
-  onSubmit,
-}: MathStepInputProps) {
+function MathStepInput(
+  {
+    value,
+    disabled,
+    placeholder,
+    maxChars,
+    autoFocus = false,
+    modeResetKey,
+    onChange,
+    onSubmit,
+  }: MathStepInputProps,
+  ref: ForwardedRef<MathStepInputHandle>
+) {
   const inputShellRef = useRef<HTMLDivElement | null>(null);
   const mathfieldRef = useRef<MathfieldElement | null>(null);
   const onChangeRef = useRef(onChange);
@@ -60,6 +80,40 @@ export default function MathStepInput({
   const isTypingNumericExponentRef = useRef(false);
   const lastAcceptedLatexRef = useRef("");
   const [entryMode, setEntryMode] = useState<"math" | "text">("text");
+
+  const draftFromLatex = useCallback((latex: string): MathStepDraft => {
+    const submitValue = mathLiveLatexToSubmitText(latex);
+    return {
+      value: submitValue,
+      displayValue: submitValue ? mathLiveLatexToMixedDisplay(latex) : null,
+    };
+  }, []);
+
+  const getCurrentDraft = useCallback((): MathStepDraft => {
+    const mathfield = mathfieldRef.current;
+    if (!mathfield || !hasVisibleMathfieldContent(mathfield)) {
+      return { value: "", displayValue: null };
+    }
+
+    const latex = mathfield.getValue("latex-without-placeholders") || "";
+    const draft = draftFromLatex(latex);
+    if (!maxChars || draft.value.length <= maxChars) return draft;
+
+    if (mathfield.value !== lastAcceptedLatexRef.current) {
+      mathfield.value = lastAcceptedLatexRef.current;
+    }
+    return lastAcceptedLatexRef.current
+      ? draftFromLatex(lastAcceptedLatexRef.current)
+      : { value: "", displayValue: null };
+  }, [draftFromLatex, maxChars]);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      getDraft: getCurrentDraft,
+    }),
+    [getCurrentDraft]
+  );
 
   useEffect(() => {
     onChangeRef.current = onChange;
@@ -90,21 +144,15 @@ export default function MathStepInput({
     mathfield.removeExtraneousParentheses = false;
 
     const syncValue = () => {
-      if (!hasVisibleMathfieldContent(mathfield)) {
+      const draft = getCurrentDraft();
+      if (!draft.value) {
         onChangeRef.current("", null);
         return;
       }
 
       const latex = mathfield.getValue("latex-without-placeholders") || "";
-      const submitValue = mathLiveLatexToSubmitText(latex);
-      if (maxChars && submitValue.length > maxChars) {
-        if (mathfield.value !== lastAcceptedLatexRef.current) {
-          mathfield.value = lastAcceptedLatexRef.current;
-        }
-        return;
-      }
       lastAcceptedLatexRef.current = latex;
-      onChangeRef.current(submitValue, submitValue ? mathLiveLatexToMixedDisplay(latex) : null);
+      onChangeRef.current(draft.value, draft.displayValue);
     };
     const syncAfterMathLiveUpdate = () => {
       window.requestAnimationFrame(syncValue);
@@ -217,7 +265,7 @@ export default function MathStepInput({
       mathfield.removeEventListener("focus", keepFocusedInputVisible);
       mathfield.removeEventListener("click", handleClick);
     };
-  }, [maxChars, placeholder, scrollInputIntoView]);
+  }, [getCurrentDraft, placeholder, scrollInputIntoView]);
 
   useEffect(() => {
     const visualViewport = window.visualViewport;
@@ -343,3 +391,5 @@ export default function MathStepInput({
     </div>
   );
 }
+
+export default forwardRef<MathStepInputHandle, MathStepInputProps>(MathStepInput);
