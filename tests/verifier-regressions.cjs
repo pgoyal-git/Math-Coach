@@ -2222,6 +2222,40 @@ test("styled reduced fractions from MathLive solve on the first submission", () 
   }
 });
 
+test("completed equalities ending in a reduced final value solve immediately", () => {
+  const session = makeSession({
+    problem:
+      "If r and s are the roots of x^2 - 3x + 2 = 0, what is 1/r + 1/s?",
+    solutionGuide: {
+      finalAnswer: "3/2",
+      solutionOutline: [],
+      keyCheckpoints: [],
+      alternateMethods: [],
+      commonWrongPaths: [],
+      confidence: 1,
+      caution: null,
+    },
+  });
+
+  for (const message of [
+    "1 + 1/2 = 3/2",
+    "1 + \\frac{1}{2} = \\displaystyle \\frac{3}{2}\\,",
+  ]) {
+    const result = verifyCanonicalNumericClaim(session, message);
+    assertStatus(result, "correct");
+    assert.equal(result.intent, "final_answer");
+    assert.equal(result.should_finish, true);
+    assert.equal(result.suggested_next_check, null);
+    assert.equal(looksUnevaluatedFinalExpression(message), false);
+  }
+
+  const unreduced = verifyCanonicalNumericClaim(session, "1 + 1/2 = 6/4");
+  assertStatus(unreduced, "partially_correct");
+  assert.equal(unreduced.should_finish, false);
+  assert.match(unreduced.suggested_next_check || "", /evaluate|simplified/i);
+  assert.equal(looksUnevaluatedFinalExpression("1 + 1/2"), true);
+});
+
 test("common-fraction final answer accepts answer-is reduced fraction", () => {
   const session = makeSession({
     problem:
@@ -3118,6 +3152,49 @@ test("registry finishes already reduced common fraction instead of asking to red
   assert.equal(result.suggested_next_check, null);
 });
 
+test("registry gives a deterministic completed equality precedence over model routing", async () => {
+  const session = makeSession({
+    problem:
+      "If r and s are the roots of x^2 - 3x + 2 = 0, what is 1/r + 1/s?",
+    workState: {
+      acceptedLines: [
+        "x^2 - 3x + 2 = (x - 1)(x - 2) = 0",
+        "r = 1, s = 2",
+        "1/r + 1/s = 1/1 + 1/2",
+      ],
+      lastValidLine: "1/r + 1/s = 1/1 + 1/2",
+      rejectedLines: [],
+    },
+    solutionGuide: {
+      finalAnswer: "3/2",
+      solutionOutline: [],
+      keyCheckpoints: [],
+      alternateMethods: [],
+      commonWrongPaths: [],
+      confidence: 1,
+      caution: null,
+    },
+  });
+
+  const result = await runVerifierRegistry({
+    session,
+    message: "1 + 1/2 = 3/2",
+    modelVerifyFinalAnswer: async () => {
+      throw new Error("final-answer model should not run");
+    },
+    modelVerify: async () => {
+      throw new Error("semantic model should not run");
+    },
+    applyConservativePolicy: (verification) => verification,
+    requireEvaluationForUnevaluatedFinal,
+  });
+
+  assertStatus(result, "correct");
+  assert.equal(result.intent, "final_answer");
+  assert.equal(result.should_finish, true);
+  assert.equal(result.suggested_next_check, null);
+});
+
 test("unreduced simple fraction remains progress when checked answer is reduced", async () => {
   const session = makeSession({
     problem: "Find the probability of the event.",
@@ -3966,6 +4043,54 @@ test("message route review-step accepts a styled reduced fraction immediately", 
       body: JSON.stringify({
         sessionId: session.sessionId,
         message: "\\displaystyle \\frac{3}{2}\\,",
+      }),
+    })
+  );
+  const body = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(body.response_type, "encouragement");
+  assert.equal(body.verification.intent, "final_answer");
+  assert.equal(body.verification.status, "correct");
+  assert.equal(body.is_finished, true);
+  assert.doesNotMatch(body.message, /evaluate|simplified final answer/i);
+
+  sessionStore.delete(session.sessionId);
+});
+
+test("message route accepts a completed equality ending in the reduced answer", async () => {
+  const session = makeSession({
+    sessionId: "review-step-completed-equality-route-test",
+    problem:
+      "If r and s are the roots of x^2 - 3x + 2 = 0, what is 1/r + 1/s?",
+    workState: {
+      acceptedLines: [
+        "x^2 - 3x + 2 = (x - 1)(x - 2) = 0",
+        "r = 1, s = 2",
+        "1/r + 1/s = 1/1 + 1/2",
+      ],
+      lastValidLine: "1/r + 1/s = 1/1 + 1/2",
+      rejectedLines: [],
+    },
+    solutionGuide: {
+      finalAnswer: "3/2",
+      solutionOutline: [],
+      keyCheckpoints: [],
+      alternateMethods: [],
+      commonWrongPaths: [],
+      confidence: 1,
+      caution: null,
+    },
+    solutionGuideStatus: "ready",
+  });
+  sessionStore.set(session.sessionId, session);
+
+  const response = await messagePost(
+    new Request("http://localhost/api/session/message", {
+      method: "POST",
+      body: JSON.stringify({
+        sessionId: session.sessionId,
+        message: "1 + 1/2 = 3/2",
       }),
     })
   );

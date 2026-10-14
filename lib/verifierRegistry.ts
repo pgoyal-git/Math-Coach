@@ -11,6 +11,7 @@ import {
   equalRational,
   parseSingleArithmeticCandidate,
 } from "@/lib/coach-verifier/math";
+import { hasSimplifiedTerminalNumericResult } from "@/lib/coach-verifier/canonicalNumeric";
 import {
   shouldDeferRelevanceToSemanticArithmetic,
   verifyProblemRelevance,
@@ -513,6 +514,28 @@ export const defaultVerifierRegistry: Verifier[] = [
     async verify(context) {
       const { session, message } = context;
       const deterministicVerification = deterministicVerify(session, message);
+      if (
+        deterministicVerification?.should_finish &&
+        deterministicVerification.status === "correct" &&
+        deterministicVerification.source === "deterministic" &&
+        hasSimplifiedTerminalNumericResult(message)
+      ) {
+        const terminalResult = message.split("=").at(-1)?.trim();
+        if (
+          terminalResult &&
+          await canonicalFinalAnswerMatches(session, terminalResult) === true
+        ) {
+          const evaluatedDeterministicVerification =
+            context.requireEvaluationForUnevaluatedFinal(
+              deterministicVerification,
+              message,
+              session
+            );
+          if (evaluatedDeterministicVerification.should_finish) {
+            return evaluatedDeterministicVerification;
+          }
+        }
+      }
       const symbolicFallbackAllowed = context.state.claim.allowSymbolicFallback;
       const semanticArithmeticStep = shouldDeferRelevanceToSemanticArithmetic(
         session,

@@ -44,6 +44,7 @@ import {
   requestValidationResponse,
 } from "@/lib/requestSafety";
 import { canonicalizeNumericTokens } from "@/lib/numericText";
+import { hasSimplifiedTerminalNumericResult } from "@/lib/coach-verifier/canonicalNumeric";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -590,6 +591,7 @@ export function looksUnevaluatedFinalExpression(message: string) {
   const latexFractionWithUnevaluatedParts =
     /\\[dt]?frac\s*\{[\s\S]*(?:\\cdot|\\times|[+*^!()]|[\u00d7\u00b7])[\s\S]*\}\s*\{/i;
 
+  if (hasSimplifiedTerminalNumericResult(message)) return false;
   if (/^[a-z]\s*=\s*-?\d+(?:\.\d+)?(?:\s*\/\s*\d+)?\??$/i.test(trimmed)) return false;
   if (simpleNumericAnswer.test(trimmed)) return false;
   if (simpleFractionAnswer) {

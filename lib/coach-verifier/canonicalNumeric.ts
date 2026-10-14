@@ -400,6 +400,19 @@ function isReducedCommonFraction(text: string) {
   return gcdBigInt(fraction.numerator, fraction.denominator) === BigInt(1);
 }
 
+export function hasSimplifiedTerminalNumericResult(text: string) {
+  const equalityParts = text.split("=").map((part) => part.trim()).filter(Boolean);
+  if (equalityParts.length < 2) return false;
+
+  const terminalResult = equalityParts.at(-1);
+  if (!terminalResult || !looksLikeStandaloneNumericAnswer(terminalResult)) return false;
+
+  const fraction = submittedSimpleFraction(terminalResult);
+  if (fraction && !isReducedCommonFraction(terminalResult)) return false;
+
+  return Boolean(parseCanonicalNumericValue(terminalResult));
+}
+
 function solutionGuideValues(session: CoachSession) {
   if (!session.solutionGuide?.finalAnswer || session.solutionGuide.confidence < 0.55) {
     return [];
@@ -624,7 +637,8 @@ export function verifyCanonicalNumericClaim(
     (
       hasFinalAnswerLabel(message) ||
       hasDescriptiveNumericLabel(message) ||
-      looksLikeStandaloneNumericAnswer(message)
+      looksLikeStandaloneNumericAnswer(message) ||
+      hasSimplifiedTerminalNumericResult(message)
     ) &&
     (!submittedSimpleFraction(message) || isReducedCommonFraction(message)) &&
     (
