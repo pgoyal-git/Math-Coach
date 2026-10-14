@@ -151,7 +151,9 @@ function stripTrailingAnswerUnit(text: string) {
 
 function parseCanonicalNumericValue(text: string) {
   const hasPercent = /%|\bpercent\b/i.test(text);
-  const withoutLabels = normalizeRepeatingDecimals(normalizeVulgarFractions(canonicalizeNumericTokens(text)))
+  const withoutLabels = normalizeRepeatingDecimals(
+    normalizeSimpleFractionText(canonicalizeNumericTokens(text))
+  )
     .replace(/\$/g, "")
     .replace(/\b(?:final\s+answer|answer)\s*(?:is|=|:)?/gi, "")
     .replace(/\bpercent\b/gi, "%")
@@ -270,9 +272,7 @@ function changesDescriptiveQuantity(session: CoachSession, message: string) {
 }
 
 function looksLikeStandaloneNumericAnswer(text: string) {
-  const normalized = normalizeVulgarFractions(text)
-    .replace(/\$/g, "")
-    .replace(/\b(?:final\s+answer|answer)\s*(?:is|=|:)?/gi, "")
+  const normalized = normalizeSimpleFractionText(text)
     .replace(/\b(?:feet|units|items|products|pages|tons|dollars?|cents?|square\s+units?)\b/gi, "")
     .replace(/[âˆ’â€“â€”]/g, "-")
     .trim();
@@ -344,6 +344,21 @@ function asksForCommonFraction(problem: string) {
   );
 }
 
+function normalizeSimpleFractionText(text: string) {
+  return normalizeVulgarFractions(text)
+    .replace(/\$/g, "")
+    .replace(/\\(?:\(|\)|\[|\])/g, "")
+    .replace(/\b(?:final\s+answer|answer)\s*(?:is|=|:)?/gi, "")
+    .replace(/\\(?:displaystyle|textstyle|scriptstyle|scriptscriptstyle|mathstrut)\b/gi, "")
+    .replace(/\\(?:left|right|mleft|mright)\b/gi, "")
+    .replace(/\\(?:mathopen|mathclose)\s*\{\s*\}/gi, "")
+    .replace(/\\(?:quad|qquad|enspace|thinspace|medspace|thickspace)\b/gi, "")
+    .replace(/\\(?:[,;:!]|\s)/g, "")
+    .replace(/[−–—]/g, "-")
+    .replace(/[.!?]+$/g, "")
+    .trim();
+}
+
 function gcdBigInt(left: bigint, right: bigint): bigint {
   let a = left < BigInt(0) ? -left : left;
   let b = right < BigInt(0) ? -right : right;
@@ -358,11 +373,7 @@ function gcdBigInt(left: bigint, right: bigint): bigint {
 }
 
 function submittedSimpleFraction(text: string) {
-  const normalized = normalizeVulgarFractions(text)
-    .replace(/\$/g, "")
-    .replace(/\b(?:final\s+answer|answer)\s*(?:is|=|:)?/gi, "")
-    .replace(/[−–—]/g, "-")
-    .trim();
+  const normalized = normalizeSimpleFractionText(text);
   const assignment = normalized.match(/^(?:[a-zA-Z]\s*=\s*(.+)|(.+)\s*=\s*[a-zA-Z])$/);
   const candidate = (assignment?.[1] || assignment?.[2] || normalized).trim();
   const latexFraction = candidate.match(

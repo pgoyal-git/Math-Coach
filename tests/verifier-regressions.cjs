@@ -2194,6 +2194,34 @@ test("common-fraction path keeps 15/400 partial and 3/80 solved", () => {
   assert.equal(final.should_finish, true);
 });
 
+test("styled reduced fractions from MathLive solve on the first submission", () => {
+  const session = makeSession({
+    problem:
+      "If r and s are the roots of x^2 - 3x + 2 = 0, what is 1/r + 1/s?",
+    solutionGuide: {
+      finalAnswer: "3/2",
+      solutionOutline: [],
+      keyCheckpoints: [],
+      alternateMethods: [],
+      commonWrongPaths: [],
+      confidence: 1,
+      caution: null,
+    },
+  });
+
+  for (const message of [
+    "\\displaystyle \\frac{3}{2}\\,",
+    "\\textstyle\\frac{3}{2}\\ ",
+    "\\mathopen{}\\frac{3}{2}\\mathclose{}",
+  ]) {
+    const result = verifyCanonicalNumericClaim(session, message);
+    assertStatus(result, "correct");
+    assert.equal(result.intent, "final_answer");
+    assert.equal(result.should_finish, true);
+    assert.equal(result.suggested_next_check, null);
+  }
+});
+
 test("common-fraction final answer accepts answer-is reduced fraction", () => {
   const session = makeSession({
     problem:
@@ -3901,6 +3929,54 @@ test("message route accepts reduced latex common fraction as final answer", asyn
   assert.equal(body.is_finished, true);
   assert.equal(body.final_answer, "44/125");
   assert.doesNotMatch(body.message, /reduce/i);
+
+  sessionStore.delete(session.sessionId);
+});
+
+test("message route review-step accepts a styled reduced fraction immediately", async () => {
+  const session = makeSession({
+    sessionId: "review-step-styled-reduced-fraction-route-test",
+    problem:
+      "If r and s are the roots of x^2 - 3x + 2 = 0, what is 1/r + 1/s?",
+    workState: {
+      acceptedLines: [
+        "x^2 - 3x + 2 = (x - 1)(x - 2) = 0",
+        "r = 1, s = 2",
+        "1/r + 1/s = 1/1 + 1/2",
+      ],
+      lastValidLine: "1/r + 1/s = 1/1 + 1/2",
+      rejectedLines: [],
+    },
+    solutionGuide: {
+      finalAnswer: "3/2",
+      solutionOutline: [],
+      keyCheckpoints: [],
+      alternateMethods: [],
+      commonWrongPaths: [],
+      confidence: 1,
+      caution: null,
+    },
+    solutionGuideStatus: "ready",
+  });
+  sessionStore.set(session.sessionId, session);
+
+  const response = await messagePost(
+    new Request("http://localhost/api/session/message", {
+      method: "POST",
+      body: JSON.stringify({
+        sessionId: session.sessionId,
+        message: "\\displaystyle \\frac{3}{2}\\,",
+      }),
+    })
+  );
+  const body = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(body.response_type, "encouragement");
+  assert.equal(body.verification.intent, "final_answer");
+  assert.equal(body.verification.status, "correct");
+  assert.equal(body.is_finished, true);
+  assert.doesNotMatch(body.message, /evaluate|simplified final answer/i);
 
   sessionStore.delete(session.sessionId);
 });
