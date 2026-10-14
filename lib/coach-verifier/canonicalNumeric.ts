@@ -348,12 +348,14 @@ function normalizeSimpleFractionText(text: string) {
   return normalizeVulgarFractions(text)
     .replace(/\$/g, "")
     .replace(/\\(?:\(|\)|\[|\])/g, "")
+    .replace(/\\text\s*\{([^{}]*)\}/gi, "$1")
     .replace(/\b(?:final\s+answer|answer)\s*(?:is|=|:)?/gi, "")
     .replace(/\\(?:displaystyle|textstyle|scriptstyle|scriptscriptstyle|mathstrut)\b/gi, "")
     .replace(/\\(?:left|right|mleft|mright)\b/gi, "")
     .replace(/\\(?:mathopen|mathclose)\s*\{\s*\}/gi, "")
     .replace(/\\(?:quad|qquad|enspace|thinspace|medspace|thickspace)\b/gi, "")
     .replace(/\\(?:[,;:!]|\s)/g, "")
+    .replace(/[\u200B-\u200D\u2060\uFEFF]/g, "")
     .replace(/[−–—]/g, "-")
     .replace(/[.!?]+$/g, "")
     .trim();
@@ -547,6 +549,7 @@ export function verifyCanonicalNumericClaim(
   const percentAnswerExpected = asksForPercentAnswer(session.problem);
   const submittedUsesPercent = /%|\bpercent\b/i.test(message);
   const variableAssignment = parseSingleVariableAssignmentValue(message);
+  const simplifiedTerminalNumericResult = hasSimplifiedTerminalNumericResult(message);
   const arithmeticExpressionValue = hasArithmeticOperator(message)
     ? parseSingleArithmeticCandidate(message)
     : null;
@@ -593,6 +596,7 @@ export function verifyCanonicalNumericClaim(
   if (
     guideValuesForFinal.length > 0 &&
     arithmeticExpressionValue &&
+    !simplifiedTerminalNumericResult &&
     !submittedSimpleFraction(message) &&
     !asksForCommonFraction(session.problem) &&
     valuesMatch([arithmeticExpressionValue], guideValuesForFinal)
@@ -638,7 +642,7 @@ export function verifyCanonicalNumericClaim(
       hasFinalAnswerLabel(message) ||
       hasDescriptiveNumericLabel(message) ||
       looksLikeStandaloneNumericAnswer(message) ||
-      hasSimplifiedTerminalNumericResult(message)
+      simplifiedTerminalNumericResult
     ) &&
     (!submittedSimpleFraction(message) || isReducedCommonFraction(message)) &&
     (

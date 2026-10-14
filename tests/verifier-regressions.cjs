@@ -2257,6 +2257,8 @@ test("completed equalities ending in a reduced final value solve immediately", (
   for (const message of [
     "1 + 1/2 = 3/2",
     "1 + \\frac{1}{2} = \\displaystyle \\frac{3}{2}\\,",
+    "\\text{ }\\frac{1}{r}+\\frac{1}{s}=\\frac{1}{1}+\\frac{1}{2}=\\frac{3}{2}\\text{ }",
+    "\\text{\\ }\\frac{1}{r}+\\frac{1}{s}=\\frac{1}{1}+\\frac{1}{2}=\\frac{3}{2}\\text{\\ }",
   ]) {
     const result = verifyCanonicalNumericClaim(session, message);
     assertStatus(result, "correct");
@@ -2271,6 +2273,35 @@ test("completed equalities ending in a reduced final value solve immediately", (
   assert.equal(unreduced.should_finish, false);
   assert.match(unreduced.suggested_next_check || "", /evaluate|simplified/i);
   assert.equal(looksUnevaluatedFinalExpression("1 + 1/2"), true);
+});
+
+test("MathLive text-mode wrappers do not delay a reduced standalone fraction", () => {
+  const session = makeSession({
+    problem:
+      "If r and s are the roots of x^2 - 3x + 2 = 0, what is 1/r + 1/s?",
+    solutionGuide: {
+      finalAnswer: "3/2",
+      solutionOutline: [],
+      keyCheckpoints: [],
+      alternateMethods: [],
+      commonWrongPaths: [],
+      confidence: 1,
+      caution: null,
+    },
+  });
+
+  for (const message of [
+    "\\text{ }\\frac{3}{2}\\text{ }",
+    "\\text{\\ }\\frac{3}{2}\\text{\\ }",
+    "\\text{3/2}",
+    "\\frac{3}{2}\u2060",
+  ]) {
+    const result = verifyCanonicalNumericClaim(session, message);
+    assertStatus(result, "correct");
+    assert.equal(result.intent, "final_answer");
+    assert.equal(result.should_finish, true);
+    assert.equal(result.suggested_next_check, null);
+  }
 });
 
 test("common-fraction final answer accepts answer-is reduced fraction", () => {
@@ -3195,7 +3226,8 @@ test("registry gives a deterministic completed equality precedence over model ro
 
   const result = await runVerifierRegistry({
     session,
-    message: "1 + 1/2 = 3/2",
+    message:
+      "\\text{ }\\frac{1}{r}+\\frac{1}{s}=\\frac{1}{1}+\\frac{1}{2}=\\frac{3}{2}\\text{ }",
     modelVerifyFinalAnswer: async () => {
       throw new Error("final-answer model should not run");
     },
@@ -4107,7 +4139,8 @@ test("message route accepts a completed equality ending in the reduced answer", 
       method: "POST",
       body: JSON.stringify({
         sessionId: session.sessionId,
-        message: "1 + 1/2 = 3/2",
+        message:
+          "\\text{ }\\frac{1}{r}+\\frac{1}{s}=\\frac{1}{1}+\\frac{1}{2}=\\frac{3}{2}\\text{ }",
       }),
     })
   );
