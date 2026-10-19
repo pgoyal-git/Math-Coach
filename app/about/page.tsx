@@ -34,12 +34,16 @@ const instructions = [
   },
 ];
 
-const references = [
+const technologies = [
+  ["TypeScript", "https://www.typescriptlang.org/"],
+  ["React", "https://react.dev/"],
   ["Next.js", "https://nextjs.org/docs"],
+  ["CSS", "https://developer.mozilla.org/en-US/docs/Web/CSS"],
   ["MathLive", "https://mathlive.io/"],
   ["KaTeX", "https://katex.org/"],
+  ["Python", "https://www.python.org/"],
   ["SymPy", "https://www.sympy.org/"],
-  ["OpenAI", "https://openai.com/"],
+  ["OpenAI API", "https://openai.com/api/"],
 ] as const;
 
 function safePresentationUrl() {
@@ -167,18 +171,19 @@ export default function AboutPage() {
       </div>
 
       <section
-        aria-labelledby="references-heading"
+        aria-labelledby="technologies-heading"
         className="mt-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8"
       >
-        <h2 id="references-heading" className="text-2xl font-bold text-slate-950">
-          References and technology
+        <h2 id="technologies-heading" className="text-2xl font-bold text-slate-950">
+          Technologies Used
         </h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          Math Coach uses the following tools for its web interface, math input,
-          mathematical rendering, symbolic verification, and coaching models.
+          Math Coach uses these technologies for its web interface, mathematical
+          input and display, symbolic verification, adaptive coaching, and image
+          understanding.
         </p>
         <ul className="mt-4 flex flex-wrap gap-3">
-          {references.map(([name, href]) => (
+          {technologies.map(([name, href]) => (
             <li key={name}>
               <a
                 href={href}

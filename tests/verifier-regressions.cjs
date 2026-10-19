@@ -8780,7 +8780,7 @@ test("public About page includes required identity, instructions, access details
   assert.match(aboutSource, /final answer the problem asks for/);
   assert.match(aboutSource, /Competition Mode will show/);
   assert.match(aboutSource, /No account or login is required/);
-  assert.match(aboutSource, /References and technology/);
+  assert.match(aboutSource, /Technologies Used/);
   assert.match(aboutSource, /NEXT_PUBLIC_PRESENTATION_VIDEO_URL/);
   assert.match(aboutSource, /Watch the video presentation/);
   assert.match(aboutSource, /Video presentation coming soon/);
