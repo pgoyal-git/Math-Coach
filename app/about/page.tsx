@@ -138,6 +138,11 @@ export default function AboutPage() {
           <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-700">
             <li>There are no ads or paid student accounts.</li>
             <li>Uploaded images are used only for the current math session.</li>
+            <li>
+              Google Analytics measures basic site usage, such as page visits and
+              device type. Problem text and uploaded images are not sent as analytics
+              events.
+            </li>
             <li>Progress is stored locally in this browser.</li>
             <li>Server sessions expire when the service restarts.</li>
           </ul>

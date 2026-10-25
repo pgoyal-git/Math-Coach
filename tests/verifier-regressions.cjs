@@ -8780,6 +8780,8 @@ test("public About page includes required identity, instructions, access details
   assert.match(aboutSource, /final answer the problem asks for/);
   assert.match(aboutSource, /Competition Mode will show/);
   assert.match(aboutSource, /No account or login is required/);
+  assert.match(aboutSource, /Google Analytics measures basic site usage/);
+  assert.match(aboutSource, /Problem text and uploaded images are not sent/);
   assert.match(aboutSource, /Technologies Used/);
   assert.match(aboutSource, /NEXT_PUBLIC_PRESENTATION_VIDEO_URL/);
   assert.match(aboutSource, /Watch the video presentation/);
@@ -8792,6 +8794,10 @@ test("public About page includes required identity, instructions, access details
   assert.doesNotMatch(homeSource, /showPrivacy|setShowPrivacy|Privacy-first/);
   assert.doesNotMatch(homeSource, /showHowToUse|setShowHowToUse|How to use the coach\?/);
   assert.match(layoutSource, /title:\s*"Math Coach"/);
+  assert.match(layoutSource, /G-PG1NQWP058/);
+  assert.match(layoutSource, /googletagmanager\.com\/gtag\/js/);
+  assert.match(layoutSource, /allow_google_signals:\s*false/);
+  assert.match(layoutSource, /allow_ad_personalization_signals:\s*false/);
 });
 
 async function main() {

@@ -33,6 +33,10 @@ To override that link for a deployment, configure:
 NEXT_PUBLIC_PRESENTATION_VIDEO_URL=https://example.com/your-video
 ```
 
+Google Analytics is enabled site-wide with measurement ID `G-PG1NQWP058`.
+Only standard page and session measurement is configured; Google Signals and
+ad-personalization signals are disabled.
+
 On Vercel, the app reads the platform forwarding headers automatically. On
 another trusted reverse proxy, set `RATE_LIMIT_IP_HEADER` to the proxy-provided
 client-IP header name. Without Redis, local development uses an in-memory
