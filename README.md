@@ -21,13 +21,17 @@ RATE_LIMIT_HASH_SALT=use-a-long-random-secret
 SESSION_TTL_SECONDS=86400
 ```
 
-To activate the video-presentation link on the public About page, configure:
+The public About page links to the Math Coach presentation on YouTube by default:
+
+```text
+https://www.youtube.com/watch?v=__9jI2zJtTo
+```
+
+To override that link for a deployment, configure:
 
 ```bash
 NEXT_PUBLIC_PRESENTATION_VIDEO_URL=https://example.com/your-video
 ```
-
-Until this is configured, the About page displays “Video presentation coming soon” instead of a broken link.
 
 On Vercel, the app reads the platform forwarding headers automatically. On
 another trusted reverse proxy, set `RATE_LIMIT_IP_HEADER` to the proxy-provided

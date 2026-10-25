@@ -46,9 +46,13 @@ const technologies = [
   ["OpenAI API", "https://openai.com/api/"],
 ] as const;
 
+const DEFAULT_PRESENTATION_VIDEO_URL =
+  "https://www.youtube.com/watch?v=__9jI2zJtTo";
+
 function safePresentationUrl() {
-  const configuredUrl = process.env.NEXT_PUBLIC_PRESENTATION_VIDEO_URL?.trim();
-  if (!configuredUrl) return null;
+  const configuredUrl =
+    process.env.NEXT_PUBLIC_PRESENTATION_VIDEO_URL?.trim() ||
+    DEFAULT_PRESENTATION_VIDEO_URL;
 
   try {
     const url = new URL(configuredUrl);
