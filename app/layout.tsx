@@ -4,7 +4,7 @@ import "katex/dist/katex.min.css";
 import "mathlive/static.css";
 import "./globals.css";
 
-const GOOGLE_ANALYTICS_ID = "G-PG1NQWP058";
+const GOOGLE_ANALYTICS_ID = "G-4G444P5DKG";
 
 export const metadata: Metadata = {
   title: "Math Coach",

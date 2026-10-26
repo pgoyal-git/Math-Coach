@@ -8794,7 +8794,7 @@ test("public About page includes required identity, instructions, access details
   assert.doesNotMatch(homeSource, /showPrivacy|setShowPrivacy|Privacy-first/);
   assert.doesNotMatch(homeSource, /showHowToUse|setShowHowToUse|How to use the coach\?/);
   assert.match(layoutSource, /title:\s*"Math Coach"/);
-  assert.match(layoutSource, /G-PG1NQWP058/);
+  assert.match(layoutSource, /G-4G444P5DKG/);
   assert.match(layoutSource, /googletagmanager\.com\/gtag\/js/);
   assert.match(layoutSource, /allow_google_signals:\s*false/);
   assert.match(layoutSource, /allow_ad_personalization_signals:\s*false/);
